@@ -1,0 +1,26 @@
+port: 7880
+
+rtc:
+  port_range_start: 20000
+  port_range_end: 20100
+  udp_port: 7882
+  tcp_port: 7881
+  # false + --node-ip в docker: в кандидатах будет 127.0.0.1, браузер с хоста достучится
+  use_external_ip: false
+
+webhook:
+  api_key: devkey
+  urls:
+    - http://host.docker.internal:4000/live_kit/webhook
+turn:
+  enabled: true
+  udp_port: 3478
+
+keys:
+  devkey: secret
+
+redis:
+  address: redis:6379
+
+log_level: debug
+development: true

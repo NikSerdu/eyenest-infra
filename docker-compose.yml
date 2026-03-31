@@ -1,0 +1,113 @@
+version: '3.9'
+
+services:
+  postgres:
+    container_name: eyenest-postgres
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - eyenest
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: eyenest-rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    networks:
+      - eyenest
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./data/redis:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - eyenest
+
+  livekit:
+    image: livekit/livekit-server:latest
+    # node-ip=host.docker.internal: хост доступен из контейнера; браузер на хосте подключается к localhost
+    command: ['--config', '/etc/livekit.yaml', '--node-ip=192.168.0.94']
+    ports:
+      - '7880:7880'
+      - '7881:7881'
+      - '7882:7882/udp'
+      - '3478:3478/udp'
+      - '3478:3478/tcp'
+      - '20000-20100:20000-20100/udp'
+    volumes:
+      - ./livekit/livekit.yaml:/etc/livekit.yaml
+    restart: unless-stopped
+    networks:
+      - eyenest
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./data/minio:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    networks:
+      - eyenest
+
+  minio-create-bucket:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set minio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      mc mb minio/livekit --ignore-existing;
+      mc policy set public minio/livekit;
+      exit 0;
+      "
+    networks:
+      - eyenest
+
+  egress:
+    image: livekit/egress:latest
+    depends_on:
+      - livekit
+      - redis
+      - minio
+    environment:
+      EGRESS_CONFIG_FILE: /config/egress.yaml
+      LIVEKIT_WS_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+    volumes:
+      - ./recordings:/recordings
+      - ./egress/egress.yaml:/config/egress.yaml
+    cap_add:
+      - SYS_ADMIN
+    restart: unless-stopped
+    networks:
+      - eyenest
+
+volumes:
+  postgres_data:
+
+networks:
+  eyenest:
+    driver: bridge

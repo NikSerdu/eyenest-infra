@@ -1,0 +1,17 @@
+# Подключение к LiveKit и Redis — можно задать через env: LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_WS_URL
+redis:
+  address: redis:6379
+
+health_port: 8080
+log_level: debug
+
+# ws:// без TLS
+insecure: true
+
+# Один провайдер хранилища (S3-совместимый MinIO)
+s3:
+  access_key: minioadmin
+  secret: minioadmin
+  endpoint: http://minio:9000
+  bucket: livekit
+  force_path_style: true
