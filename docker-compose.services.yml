@@ -4,9 +4,12 @@
 
 x-rmq-url: &rmq_url amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
 
-# Ждём, пока RabbitMQ примет AMQP, иначе Nest даёт ECONNREFUSED и переподключается десятки секунд.
 x-depends-rabbitmq: &depends_rabbitmq
   rabbitmq:
+    condition: service_healthy
+
+x-depends-postgres: &depends_postgres
+  postgres:
     condition: service_healthy
 
 services:
@@ -16,6 +19,8 @@ services:
       dockerfile: Dockerfile
     container_name: eyenest-auth-service
     restart: unless-stopped
+    depends_on:
+      <<: *depends_postgres
     environment:
       NODE_ENV: production
       DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
@@ -70,6 +75,8 @@ services:
       - '50052:50052'
     depends_on:
       <<: *depends_rabbitmq
+      postgres:
+        condition: service_healthy
     networks:
       - eyenest
 
@@ -97,6 +104,8 @@ services:
       - '50053:50053'
     depends_on:
       <<: *depends_rabbitmq
+      postgres:
+        condition: service_healthy
       camera-service:
         condition: service_started
     networks:
@@ -172,6 +181,8 @@ services:
       - '50055:50055'
     depends_on:
       <<: *depends_rabbitmq
+      postgres:
+        condition: service_healthy
     networks:
       - eyenest
 
