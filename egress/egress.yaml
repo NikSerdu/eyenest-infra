@@ -1,4 +1,5 @@
-# Подключение к LiveKit и Redis — можно задать через env: LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_WS_URL
+# Подключение к LiveKit и Redis: ключи через env контейнера (см. docker-compose.yml egress).
+# access_key/secret здесь должны совпадать с MINIO_ROOT_USER / MINIO_ROOT_PASSWORD в .env
 redis:
   address: redis:6379
 

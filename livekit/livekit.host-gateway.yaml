@@ -1,0 +1,32 @@
+# Для локальной разработки: только infra в Docker, gateway (и прочие сервисы) на хосте.
+# Подключается через: docker compose -f docker-compose.yml -f docker-compose.local.yml ...
+# Webhook идёт на хост: порт должен совпадать с HTTP_PORT gateway (по умолчанию 3000).
+# Секция keys и webhook.api_key должны совпадать с livekit.yaml (и с LIVEKIT_* в .env сервисов).
+
+port: 7880
+
+rtc:
+  port_range_start: 20000
+  port_range_end: 20100
+  udp_port: 7882
+  tcp_port: 7881
+  use_external_ip: false
+
+# api_key = LIVEKIT_WEBHOOK_KEY в gateway на хосте.
+webhook:
+  api_key: devkey
+  urls:
+    - http://host.docker.internal:3000/live_kit/webhook
+
+turn:
+  enabled: true
+  udp_port: 3478
+
+keys:
+  devkey: secret
+
+redis:
+  address: redis:6379
+
+log_level: debug
+development: true

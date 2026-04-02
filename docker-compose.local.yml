@@ -1,0 +1,16 @@
+# Режим «infra в Docker, приложения на хосте»: LiveKit шлёт webhook на gateway на localhost.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml --env-file .env up -d
+#
+# На Linux имя host.docker.internal по умолчанию отсутствует — добавлен extra_hosts.
+# На Windows/macOS обычно уже работает; extra_hosts не мешает.
+#
+# На хосте в .env сервисов укажите, например: DATABASE_HOST=localhost, порты как в compose
+# (Postgres на хосте 5433→5432, Redis 6379, RabbitMQ 5672, LiveKit ws://localhost:7880).
+
+services:
+  livekit:
+    volumes:
+      - ./livekit/livekit.host-gateway.yaml:/etc/livekit.yaml
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

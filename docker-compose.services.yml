@@ -1,0 +1,250 @@
+# Все backend-сервисы + AI. Сеть eyenest-net создаётся базовым compose (имя задано в docker-compose.yml).
+# Порядок:
+#   docker compose --env-file .env up -d
+#   docker compose -f docker-compose.services.yml --env-file .env up -d
+# Зависимости postgres/redis/rabbitmq между файлами не описаны: при первом запуске подождите готовность БД или перезапустите сервисы.
+
+name: eyenest-services
+
+x-rmq-url: &rmq_url amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+
+services:
+  auth-service:
+    build:
+      context: ../services/auth-service
+      dockerfile: Dockerfile
+    container_name: eyenest-auth-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      DATABASE_USER: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: '5432'
+      DATABASE_NAME: postgres
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: '50051'
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      REDIS_DB: '0'
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRES: ${JWT_ACCESS_TOKEN_EXPIRES:-15m}
+      JWT_REFRESH_TOKEN_EXPIRES: ${JWT_REFRESH_TOKEN_EXPIRES:-7d}
+      NOTIFICATIONS_GRPC_URL: notification-service:50054
+    ports:
+      - '50051:50051'
+    networks:
+      - eyenest
+
+  camera-service:
+    build:
+      context: ../services/camera-service
+      dockerfile: Dockerfile
+    container_name: eyenest-camera-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      DATABASE_USER: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: '5432'
+      DATABASE_NAME: postgres
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: '50052'
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      REDIS_DB: '0'
+      RMQ_URL: *rmq_url
+      RMQ_EVENTS_EXCHANGE: ${RMQ_EVENTS_EXCHANGE:-eyenest.events}
+      RMQ_CAMERA_QUEUE: ${RMQ_CAMERA_QUEUE:-camera.events.queue}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRES: ${JWT_ACCESS_TOKEN_EXPIRES:-15m}
+      JWT_REFRESH_TOKEN_EXPIRES: ${JWT_REFRESH_TOKEN_EXPIRES:-7d}
+      AUTH_GRPC_URL: auth-service:50051
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+    ports:
+      - '50052:50052'
+    networks:
+      - eyenest
+
+  events-service:
+    build:
+      context: ../services/events-service
+      dockerfile: Dockerfile
+    container_name: eyenest-events-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      DATABASE_USER: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: '5432'
+      DATABASE_NAME: postgres
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: '50053'
+      RMQ_URL: *rmq_url
+      RMQ_EVENTS_EXCHANGE: ${RMQ_EVENTS_EXCHANGE:-eyenest.events}
+      RMQ_EVENT_QUEUE: ${RMQ_EVENT_QUEUE:-events.queue}
+      CAMERA_GRPC_URL: camera-service:50052
+    ports:
+      - '50053:50053'
+    depends_on:
+      - camera-service
+    networks:
+      - eyenest
+
+  notification-service:
+    build:
+      context: ../services/notification-service
+      dockerfile: Dockerfile
+    container_name: eyenest-notification-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: '50054'
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      REDIS_DB: '0'
+      RMQ_URL: *rmq_url
+      RMQ_EVENTS_EXCHANGE: ${RMQ_EVENTS_EXCHANGE:-eyenest.events}
+      RMQ_NOTIFICATIONS_QUEUE: ${RMQ_NOTIFICATIONS_QUEUE:-notifications.events.queue}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRES: ${JWT_ACCESS_TOKEN_EXPIRES:-15m}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      MAILTRAP_TOKEN: ${MAILTRAP_TOKEN}
+      MOTION_NOTIFICATION_COOLDOWN_SEC: ${MOTION_NOTIFICATION_COOLDOWN_SEC:-60}
+      AUTH_GRPC_URL: auth-service:50051
+      CAMERA_GRPC_URL: camera-service:50052
+    ports:
+      - '50054:50054'
+    depends_on:
+      - auth-service
+      - camera-service
+    networks:
+      - eyenest
+
+  video-service:
+    build:
+      context: ../services/video-service
+      dockerfile: Dockerfile
+    container_name: eyenest-video-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      DATABASE_USER: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: '5432'
+      DATABASE_NAME: postgres
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: '50055'
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      REDIS_DB: '0'
+      RMQ_URL: *rmq_url
+      RMQ_EVENTS_EXCHANGE: ${RMQ_EVENTS_EXCHANGE:-eyenest.events}
+      RMQ_VIDEO_QUEUE: ${RMQ_VIDEO_QUEUE:-video.events.queue}
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: livekit
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_EXTERNAL_ENDPOINT: ${MINIO_EXTERNAL_ENDPOINT:-http://localhost:9000}
+      EGRESS_TEMPLATE_URL: ${EGRESS_TEMPLATE_URL:-http://localhost:8080}
+      PRESIGNED_URL_EXPIRES_IN: ${PRESIGNED_URL_EXPIRES_IN:-3600}
+    ports:
+      - '50055:50055'
+    networks:
+      - eyenest
+
+  gateway-service:
+    build:
+      context: ../services/gateway-service
+      dockerfile: Dockerfile
+    container_name: eyenest-gateway-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HTTP_HOST: ${GATEWAY_PUBLIC_ORIGIN:-http://localhost:3000}
+      HTTP_PORT: '3000'
+      HTTP_CORS: ${HTTP_CORS:-http://localhost:5173,http://localhost:5174}
+      COOKIES_SECRET: ${COOKIES_SECRET}
+      COOKIES_DOMAIN: ${COOKIES_DOMAIN:-localhost}
+      JWT_SECRET: ${JWT_SECRET}
+      RMQ_URL: *rmq_url
+      RMQ_EVENTS_EXCHANGE: ${RMQ_EVENTS_EXCHANGE:-eyenest.events}
+      RMQ_GATEWAY_QUEUE: ${RMQ_GATEWAY_QUEUE:-gateway.events.publisher}
+      AUTH_GRPC_URL: auth-service:50051
+      CAMERA_GRPC_URL: camera-service:50052
+      VIDEO_GRPC_URL: video-service:50055
+      EVENTS_GRPC_URL: events-service:50053
+      NOTIFICATIONS_GRPC_URL: notification-service:50054
+      LIVEKIT_WEBHOOK_KEY: ${LIVEKIT_WEBHOOK_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+    ports:
+      - '${GATEWAY_HTTP_PORT:-3000}:3000'
+    depends_on:
+      - auth-service
+      - camera-service
+      - video-service
+      - events-service
+      - notification-service
+    networks:
+      - eyenest
+
+  ai-motion-agent:
+    build:
+      context: ../services/ai-service
+      dockerfile: Dockerfile
+    container_name: eyenest-ai-motion-agent
+    restart: unless-stopped
+    command: ['main.py', 'start']
+    environment:
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      MOTION_AGENT_NAME: ${MOTION_AGENT_NAME:-motion-detector}
+      MOTION_MIN_AREA: ${MOTION_MIN_AREA:-2500}
+      MOTION_FRAME_COOLDOWN_SEC: ${MOTION_FRAME_COOLDOWN_SEC:-3.0}
+      MOTION_BLUR_SIZE: ${MOTION_BLUR_SIZE:-21}
+      RMQ_URL: *rmq_url
+      RMQ_EVENTS_EXCHANGE: ${RMQ_EVENTS_EXCHANGE:-eyenest.events}
+      RMQ_AI_QUEUE: ${RMQ_AI_QUEUE:-ai.events.queue}
+      MOTION_ON_RK: ${MOTION_ON_RK:-motion.on}
+      MOTION_OFF_RK: ${MOTION_OFF_RK:-motion.off}
+      MOTION_DETECTED_RK: ${MOTION_DETECTED_RK:-motion.detected}
+    networks:
+      - eyenest
+
+  ai-rmq-orchestrator:
+    build:
+      context: ../services/ai-service
+      dockerfile: Dockerfile
+    container_name: eyenest-ai-rmq-orchestrator
+    restart: unless-stopped
+    command: ['rmq_motion_orchestrator.py']
+    environment:
+      LIVEKIT_URL: ws://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      MOTION_AGENT_NAME: ${MOTION_AGENT_NAME:-motion-detector}
+      RMQ_URL: *rmq_url
+      RMQ_EVENTS_EXCHANGE: ${RMQ_EVENTS_EXCHANGE:-eyenest.events}
+      RMQ_AI_QUEUE: ${RMQ_AI_QUEUE:-ai.events.queue}
+      MOTION_ON_RK: ${MOTION_ON_RK:-motion.on}
+      MOTION_OFF_RK: ${MOTION_OFF_RK:-motion.off}
+    networks:
+      - eyenest
+
+networks:
+  eyenest:
+    external: true
+    name: eyenest-net

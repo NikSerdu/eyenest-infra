@@ -1,4 +1,16 @@
-version: '3.9'
+# Инфраструктура: Postgres, Redis, RabbitMQ, LiveKit, MinIO, Egress.
+# Сеть фиксированного имени eyenest-net — к ней подключаются docker-compose.services.yml и (при необходимости) фронты.
+#
+# Полный Docker (VPS или локально): gateway в docker-compose.services.yml
+#   docker compose --env-file .env up -d
+#   docker compose -f docker-compose.services.yml --env-file .env up -d
+#   docker compose -f docker-compose.frontends.yml --env-file .env build && docker compose -f docker-compose.frontends.yml --env-file .env up -d
+#
+# Локально: только infra в Docker, Nest/gateway на хосте (webhook → host.docker.internal:3000):
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml --env-file .env up -d
+# См. livekit/livekit.host-gateway.yaml и комментарии в docker-compose.local.yml
+
+name: eyenest-infra
 
 services:
   postgres:
@@ -29,6 +41,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: eyenest-redis
     ports:
       - '6379:6379'
     volumes:
@@ -40,8 +53,11 @@ services:
 
   livekit:
     image: livekit/livekit-server:latest
-    # node-ip=host.docker.internal: хост доступен из контейнера; браузер на хосте подключается к localhost
-    command: ['--config', '/etc/livekit.yaml', '--node-ip=192.168.0.94']
+    # На VPS часто нужен публичный IPv4 (или интерфейс узла); иначе WebRTC не сработает за NAT.
+    command:
+      - --config
+      - /etc/livekit.yaml
+      - --node-ip=${LIVEKIT_NODE_IP:-0.0.0.0}
     ports:
       - '7880:7880'
       - '7881:7881'
@@ -57,6 +73,7 @@ services:
 
   minio:
     image: minio/minio:latest
+    container_name: eyenest-minio
     ports:
       - '9000:9000'
       - '9001:9001'
@@ -87,6 +104,7 @@ services:
 
   egress:
     image: livekit/egress:latest
+    container_name: eyenest-egress
     depends_on:
       - livekit
       - redis
@@ -111,3 +129,4 @@ volumes:
 networks:
   eyenest:
     driver: bridge
+    name: eyenest-net

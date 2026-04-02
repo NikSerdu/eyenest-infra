@@ -8,10 +8,13 @@ rtc:
   # false + --node-ip в docker: в кандидатах будет 127.0.0.1, браузер с хоста достучится
   use_external_ip: false
 
+# api_key должен совпадать с LIVEKIT_WEBHOOK_KEY у gateway-service.
+# URL — внутри Docker-сети eyenest-net (контейнер gateway-service на порту приложения 3000).
+# Если gateway крутится на хосте: см. livekit.host-gateway.yaml + docker-compose.local.yml
 webhook:
   api_key: devkey
   urls:
-    - http://host.docker.internal:4000/live_kit/webhook
+    - http://gateway-service:3000/live_kit/webhook
 turn:
   enabled: true
   udp_port: 3478
