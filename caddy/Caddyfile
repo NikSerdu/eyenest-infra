@@ -9,8 +9,11 @@
 }
 
 # tls internal — без покупки домена; браузер спросит доверие к локальному CA Caddy (один раз «Дополнительно → перейти»).
+#
+# Нельзя оставлять только https://:443 — при заходе по IP/127.0.0.1 SNI не совпадает с выпущенным сертификатом, TLS падает
+# с alert internal error (curl: error:0A000438). Нужны явные хосты; PUBLIC_HOST задаётся в .env и в контейнере caddy.
 
-https://:443 {
+https://{$PUBLIC_HOST}, https://127.0.0.1, https://localhost {
 	tls internal
 
 	handle_path /cam/* {
@@ -50,12 +53,12 @@ https://:443 {
 	}
 }
 
-https://:7443 {
+https://{$PUBLIC_HOST}:7443, https://127.0.0.1:7443, https://localhost:7443 {
 	tls internal
 	reverse_proxy livekit:7880
 }
 
-https://:8900 {
+https://{$PUBLIC_HOST}:8900, https://127.0.0.1:8900, https://localhost:8900 {
 	tls internal
 	reverse_proxy minio:9000
 }

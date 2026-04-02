@@ -10,6 +10,8 @@ services:
       - '443:443'
       - '7443:7443'
       - '8900:8900'
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:-127.0.0.1}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
