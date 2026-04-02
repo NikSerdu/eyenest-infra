@@ -1,0 +1,28 @@
+# TLS-прокси (Caddy). Подключается в compose.yaml вместе с остальными файлами.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: eyenest-caddy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '7443:7443'
+      - '8900:8900'
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - eyenest
+    depends_on:
+      - livekit
+      - minio
+      - gateway-service
+      - frontend
+      - camera-frontend
+
+volumes:
+  caddy_data:
+  caddy_config:

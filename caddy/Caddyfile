@@ -1,0 +1,61 @@
+{
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+:80 {
+	redir https://{host}{uri}
+}
+
+# tls internal — без покупки домена; браузер спросит доверие к локальному CA Caddy (один раз «Дополнительно → перейти»).
+
+https://:443 {
+	tls internal
+
+	handle_path /cam/* {
+		reverse_proxy camera-frontend:80
+	}
+
+	handle /openapi.yaml {
+		reverse_proxy gateway-service:3000
+	}
+	handle /docs* {
+		reverse_proxy gateway-service:3000
+	}
+	handle /auth* {
+		reverse_proxy gateway-service:3000
+	}
+	handle /camera* {
+		reverse_proxy gateway-service:3000
+	}
+	handle /video* {
+		reverse_proxy gateway-service:3000
+	}
+	handle /notifications* {
+		reverse_proxy gateway-service:3000
+	}
+	handle /events* {
+		reverse_proxy gateway-service:3000
+	}
+	handle /live_kit* {
+		reverse_proxy gateway-service:3000
+	}
+	handle /health {
+		reverse_proxy gateway-service:3000
+	}
+
+	handle {
+		reverse_proxy frontend:80
+	}
+}
+
+https://:7443 {
+	tls internal
+	reverse_proxy livekit:7880
+}
+
+https://:8900 {
+	tls internal
+	reverse_proxy minio:9000
+}

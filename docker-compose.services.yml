@@ -1,10 +1,5 @@
-# Все backend-сервисы + AI. Сеть eyenest-net создаётся базовым compose (имя задано в docker-compose.yml).
-# Порядок:
-#   docker compose --env-file .env up -d
-#   docker compose -f docker-compose.services.yml --env-file .env up -d
-# Зависимости postgres/redis/rabbitmq между файлами не описаны: при первом запуске подождите готовность БД или перезапустите сервисы.
-
-name: eyenest-services
+# Backend + AI. В составе compose.yaml или: docker compose -f docker-compose.yml -f docker-compose.services.yml ...
+# Зависимости БД между файлами не описаны: при первом старте подождите postgres или перезапустите сервисы.
 
 x-rmq-url: &rmq_url amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
 
@@ -157,7 +152,7 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET: livekit
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_EXTERNAL_ENDPOINT: ${MINIO_EXTERNAL_ENDPOINT:-http://localhost:9000}
+      MINIO_EXTERNAL_ENDPOINT: https://${PUBLIC_HOST:-127.0.0.1}:8900
       EGRESS_TEMPLATE_URL: ${EGRESS_TEMPLATE_URL:-http://localhost:8080}
       PRESIGNED_URL_EXPIRES_IN: ${PRESIGNED_URL_EXPIRES_IN:-3600}
     ports:
@@ -173,11 +168,11 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      HTTP_HOST: ${GATEWAY_PUBLIC_ORIGIN:-http://localhost:3000}
+      HTTP_HOST: https://${PUBLIC_HOST:-127.0.0.1}
       HTTP_PORT: '3000'
-      HTTP_CORS: ${HTTP_CORS:-http://localhost:5173,http://localhost:5174}
+      HTTP_CORS: https://${PUBLIC_HOST:-127.0.0.1}
       COOKIES_SECRET: ${COOKIES_SECRET}
-      COOKIES_DOMAIN: ${COOKIES_DOMAIN:-localhost}
+      COOKIES_DOMAIN: ${COOKIES_DOMAIN:-}
       JWT_SECRET: ${JWT_SECRET}
       RMQ_URL: *rmq_url
       RMQ_EVENTS_EXCHANGE: ${RMQ_EVENTS_EXCHANGE:-eyenest.events}
@@ -244,7 +239,3 @@ services:
     networks:
       - eyenest
 
-networks:
-  eyenest:
-    external: true
-    name: eyenest-net

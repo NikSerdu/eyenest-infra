@@ -1,16 +1,6 @@
 # Инфраструктура: Postgres, Redis, RabbitMQ, LiveKit, MinIO, Egress.
-# Сеть фиксированного имени eyenest-net — к ней подключаются docker-compose.services.yml и (при необходимости) фронты.
-#
-# Полный Docker (VPS или локально): gateway в docker-compose.services.yml
+# Полный стек см. compose.yaml (Caddy + HTTPS). Только infra:
 #   docker compose --env-file .env up -d
-#   docker compose -f docker-compose.services.yml --env-file .env up -d
-#   docker compose -f docker-compose.frontends.yml --env-file .env build && docker compose -f docker-compose.frontends.yml --env-file .env up -d
-#
-# Локально: только infra в Docker, Nest/gateway на хосте (webhook → host.docker.internal:3000):
-#   docker compose -f docker-compose.yml -f docker-compose.local.yml --env-file .env up -d
-# См. livekit/livekit.host-gateway.yaml и комментарии в docker-compose.local.yml
-
-name: eyenest-infra
 
 services:
   postgres:
@@ -57,7 +47,7 @@ services:
     command:
       - --config
       - /etc/livekit.yaml
-      - --node-ip=${LIVEKIT_NODE_IP:-0.0.0.0}
+      - --node-ip=${LIVEKIT_NODE_IP:-${PUBLIC_HOST:-0.0.0.0}}
     ports:
       - '7880:7880'
       - '7881:7881'

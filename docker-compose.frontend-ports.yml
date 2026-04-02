@@ -1,0 +1,8 @@
+# Опционально: опубликовать фронты на 5173/5174 (без Caddy).
+services:
+  frontend:
+    ports:
+      - '${FRONTEND_HTTP_PORT:-5173}:80'
+  camera-frontend:
+    ports:
+      - '${CAMERA_FRONTEND_HTTP_PORT:-5174}:80'

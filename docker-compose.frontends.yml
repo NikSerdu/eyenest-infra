@@ -1,30 +1,19 @@
-# Только SPA (Vite → nginx). Запуск из каталога infra:
-#   docker compose -f docker-compose.frontends.yml --env-file .env up -d
-#
-# VITE_* вшиваются при сборке: задайте PUBLIC_API_URL и PUBLIC_LIVEKIT_WS_URL так,
-# как к ним ходит браузер пользователя (домен/HTTPS/WSS на VPS).
-
-name: eyenest-frontends
+# SPA за reverse-proxy (compose.yaml). Снаружи только 443; порты не публикуются.
+# Локально без Caddy: docker compose -f docker-compose.frontend-ports.yml (см. ниже) или pnpm dev.
 
 services:
   frontend:
     build:
       context: ../frontend
       dockerfile: Dockerfile
-      args:
-        VITE_SERVER_URL: ${PUBLIC_API_URL:-http://localhost:3000}
-        VITE_LIVEKIT_URL: ${PUBLIC_LIVEKIT_WS_URL:-ws://localhost:7880}
     restart: unless-stopped
-    ports:
-      - '${FRONTEND_HTTP_PORT:-5173}:80'
+    networks:
+      - eyenest
 
   camera-frontend:
     build:
       context: ../camera-frontend
       dockerfile: Dockerfile
-      args:
-        VITE_SERVER_URL: ${PUBLIC_API_URL:-http://localhost:3000}
-        VITE_LIVEKIT_URL: ${PUBLIC_LIVEKIT_WS_URL:-ws://localhost:7880}
     restart: unless-stopped
-    ports:
-      - '${CAMERA_FRONTEND_HTTP_PORT:-5174}:80'
+    networks:
+      - eyenest
