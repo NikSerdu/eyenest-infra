@@ -1,6 +1,6 @@
-# Полный стек одной командой (Docker Compose v2.20+):
-#   cd infra && cp -n .env.example .env
-#   # В .env задайте PUBLIC_HOST=ваш_публичный_IP
+# Полный стек (из репозитория eyenest-infra, рядом клоны eyenest-services и оба фронта):
+#   cd eyenest-infra && cp -n .env.example .env
+#   # PUBLIC_HOST и при необходимости EYENEST_*_DIR в .env
 #   docker compose -f compose.yaml --env-file .env up -d --build
 #
 # В браузере: https://PUBLIC_HOST/  и https://PUBLIC_HOST/cam/

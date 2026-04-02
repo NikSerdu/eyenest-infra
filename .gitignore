@@ -1,2 +1,5 @@
 data
 recordings
+.env
+.env.*
+!.env.example

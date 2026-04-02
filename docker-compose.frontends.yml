@@ -1,10 +1,9 @@
-# SPA за reverse-proxy (compose.yaml). Снаружи только 443; порты не публикуются.
-# Локально без Caddy: docker compose -f docker-compose.frontend-ports.yml (см. ниже) или pnpm dev.
+# SPA за reverse-proxy (compose.yaml). Каталоги фронтов: EYENEST_*_FRONTEND_DIR (по умолчанию eyenest-viewer-frontend, eyenest-camera-frontend).
 
 services:
   frontend:
     build:
-      context: ../frontend
+      context: ${EYENEST_VIEWER_FRONTEND_DIR:-../eyenest-viewer-frontend}
       dockerfile: Dockerfile
     restart: unless-stopped
     networks:
@@ -12,7 +11,7 @@ services:
 
   camera-frontend:
     build:
-      context: ../camera-frontend
+      context: ${EYENEST_CAMERA_FRONTEND_DIR:-../eyenest-camera-frontend}
       dockerfile: Dockerfile
     restart: unless-stopped
     networks:

@@ -1,4 +1,5 @@
 # Backend + AI. В составе compose.yaml или: docker compose -f docker-compose.yml -f docker-compose.services.yml ...
+# Пути к клонам задаются в .env (EYENEST_SERVICES_DIR). По умолчанию — ../eyenest-services рядом с eyenest-infra.
 # Зависимости БД между файлами не описаны: при первом старте подождите postgres или перезапустите сервисы.
 
 x-rmq-url: &rmq_url amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
@@ -6,7 +7,7 @@ x-rmq-url: &rmq_url amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rab
 services:
   auth-service:
     build:
-      context: ../services/auth-service
+      context: ${EYENEST_SERVICES_DIR:-../eyenest-services}/auth-service
       dockerfile: Dockerfile
     container_name: eyenest-auth-service
     restart: unless-stopped
@@ -34,7 +35,7 @@ services:
 
   camera-service:
     build:
-      context: ../services/camera-service
+      context: ${EYENEST_SERVICES_DIR:-../eyenest-services}/camera-service
       dockerfile: Dockerfile
     container_name: eyenest-camera-service
     restart: unless-stopped
@@ -67,7 +68,7 @@ services:
 
   events-service:
     build:
-      context: ../services/events-service
+      context: ${EYENEST_SERVICES_DIR:-../eyenest-services}/events-service
       dockerfile: Dockerfile
     container_name: eyenest-events-service
     restart: unless-stopped
@@ -94,7 +95,7 @@ services:
 
   notification-service:
     build:
-      context: ../services/notification-service
+      context: ${EYENEST_SERVICES_DIR:-../eyenest-services}/notification-service
       dockerfile: Dockerfile
     container_name: eyenest-notification-service
     restart: unless-stopped
@@ -125,7 +126,7 @@ services:
 
   video-service:
     build:
-      context: ../services/video-service
+      context: ${EYENEST_SERVICES_DIR:-../eyenest-services}/video-service
       dockerfile: Dockerfile
     container_name: eyenest-video-service
     restart: unless-stopped
@@ -162,7 +163,7 @@ services:
 
   gateway-service:
     build:
-      context: ../services/gateway-service
+      context: ${EYENEST_SERVICES_DIR:-../eyenest-services}/gateway-service
       dockerfile: Dockerfile
     container_name: eyenest-gateway-service
     restart: unless-stopped
@@ -197,7 +198,7 @@ services:
 
   ai-motion-agent:
     build:
-      context: ../services/ai-service
+      context: ${EYENEST_SERVICES_DIR:-../eyenest-services}/ai-service
       dockerfile: Dockerfile
     container_name: eyenest-ai-motion-agent
     restart: unless-stopped
@@ -221,7 +222,7 @@ services:
 
   ai-rmq-orchestrator:
     build:
-      context: ../services/ai-service
+      context: ${EYENEST_SERVICES_DIR:-../eyenest-services}/ai-service
       dockerfile: Dockerfile
     container_name: eyenest-ai-rmq-orchestrator
     restart: unless-stopped

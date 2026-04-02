@@ -1,6 +1,5 @@
 # Инфраструктура: Postgres, Redis, RabbitMQ, LiveKit, MinIO, Egress.
-# Полный стек см. compose.yaml (Caddy + HTTPS). Только infra:
-#   docker compose --env-file .env up -d
+# Запуск из каталога репозитория eyenest-infra. Полный стек: compose.yaml.
 
 services:
   postgres:
