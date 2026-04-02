@@ -1,0 +1,28 @@
+# TLS-прокси (Nginx). Подключается в compose.yaml вместе с остальными файлами.
+# Самоподписанный сертификат генерируется автоматически при первом запуске.
+
+services:
+  proxy:
+    build: ./nginx
+    container_name: eyenest-proxy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '7443:7443'
+      - '8900:8900'
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:-127.0.0.1}
+    volumes:
+      - nginx_certs:/etc/nginx/certs
+    networks:
+      - eyenest
+    depends_on:
+      - livekit
+      - minio
+      - gateway-service
+      - frontend
+      - camera-frontend
+
+volumes:
+  nginx_certs:

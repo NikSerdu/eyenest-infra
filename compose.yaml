@@ -4,10 +4,8 @@
 #   docker compose -f compose.yaml --env-file .env up -d --build
 #
 # В браузере: https://PUBLIC_HOST/  и https://PUBLIC_HOST/cam/
-# Первый заход: подтвердите исключение для сертификата (tls internal — свой CA Caddy).
+# Первый заход: подтвердите исключение для самоподписанного сертификата (один раз).
 # Порты: 443 приложение+API, 7443 LiveKit (WSS), 8900 MinIO S3, 80 → редирект на https.
-#
-# Если include не поддерживается, см. комментарий внизу docker-compose.yml
 
 name: eyenest
 
@@ -15,4 +13,4 @@ include:
   - path: docker-compose.yml
   - path: docker-compose.services.yml
   - path: docker-compose.frontends.yml
-  - path: docker-compose.caddy.yml
+  - path: docker-compose.proxy.yml
