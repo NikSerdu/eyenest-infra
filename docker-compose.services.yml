@@ -11,6 +11,8 @@ x-depends-rabbitmq: &depends_rabbitmq
 x-depends-postgres: &depends_postgres
   postgres:
     condition: service_healthy
+  db-init:
+    condition: service_completed_successfully
 
 services:
   auth-service:
@@ -23,12 +25,12 @@ services:
       <<: *depends_postgres
     environment:
       NODE_ENV: production
-      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
       DATABASE_USER: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_HOST: postgres
       DATABASE_PORT: '5432'
-      DATABASE_NAME: postgres
+      DATABASE_NAME: ${POSTGRES_DB:-postgres}
       GRPC_HOST: 0.0.0.0
       GRPC_PORT: '50051'
       REDIS_HOST: redis
@@ -51,12 +53,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
       DATABASE_USER: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_HOST: postgres
       DATABASE_PORT: '5432'
-      DATABASE_NAME: postgres
+      DATABASE_NAME: ${POSTGRES_DB:-postgres}
       GRPC_HOST: 0.0.0.0
       GRPC_PORT: '50052'
       REDIS_HOST: redis
@@ -74,9 +76,7 @@ services:
     ports:
       - '50052:50052'
     depends_on:
-      <<: *depends_rabbitmq
-      postgres:
-        condition: service_healthy
+      <<: [*depends_rabbitmq, *depends_postgres]
     networks:
       - eyenest
 
@@ -88,12 +88,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
       DATABASE_USER: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_HOST: postgres
       DATABASE_PORT: '5432'
-      DATABASE_NAME: postgres
+      DATABASE_NAME: ${POSTGRES_DB:-postgres}
       GRPC_HOST: 0.0.0.0
       GRPC_PORT: '50053'
       RMQ_URL: *rmq_url
@@ -103,9 +103,7 @@ services:
     ports:
       - '50053:50053'
     depends_on:
-      <<: *depends_rabbitmq
-      postgres:
-        condition: service_healthy
+      <<: [*depends_rabbitmq, *depends_postgres]
       camera-service:
         condition: service_started
     networks:
@@ -153,12 +151,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
       DATABASE_USER: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_HOST: postgres
       DATABASE_PORT: '5432'
-      DATABASE_NAME: postgres
+      DATABASE_NAME: ${POSTGRES_DB:-postgres}
       GRPC_HOST: 0.0.0.0
       GRPC_PORT: '50055'
       REDIS_HOST: redis
@@ -180,9 +178,7 @@ services:
     ports:
       - '50055:50055'
     depends_on:
-      <<: *depends_rabbitmq
-      postgres:
-        condition: service_healthy
+      <<: [*depends_rabbitmq, *depends_postgres]
     networks:
       - eyenest
 

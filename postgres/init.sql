@@ -33,7 +33,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS "user_notification_settings_userId_key" ON "us
 -- camera-service
 -- ════════════════════════════════════════════════════════════════
 
-CREATE TYPE "Status" AS ENUM ('ON', 'OFF');
+DO $$
+BEGIN
+    CREATE TYPE "Status" AS ENUM ('ON', 'OFF');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "locations" (
     "id"      TEXT NOT NULL,
@@ -67,11 +72,16 @@ CREATE UNIQUE INDEX IF NOT EXISTS "camera_settings_camera_id_key" ON "camera_set
 -- events-service
 -- ════════════════════════════════════════════════════════════════
 
-CREATE TYPE "EventType" AS ENUM (
-    'CAMERA_JOIN', 'CAMERA_LEAVE',
-    'START_RECORDING', 'STOP_RECORDING',
-    'MOTION_DETECTED', 'MOTION_ON', 'MOTION_OFF'
-);
+DO $$
+BEGIN
+    CREATE TYPE "EventType" AS ENUM (
+        'CAMERA_JOIN', 'CAMERA_LEAVE',
+        'START_RECORDING', 'STOP_RECORDING',
+        'MOTION_DETECTED', 'MOTION_ON', 'MOTION_OFF'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "events" (
     "id"         TEXT        NOT NULL,
@@ -86,7 +96,12 @@ CREATE TABLE IF NOT EXISTS "events" (
 -- video-service
 -- ════════════════════════════════════════════════════════════════
 
-CREATE TYPE "VideoFileStatus" AS ENUM ('RECORDING', 'FINISHED');
+DO $$
+BEGIN
+    CREATE TYPE "VideoFileStatus" AS ENUM ('RECORDING', 'FINISHED');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS "Egress" (
     "id"       TEXT NOT NULL,
