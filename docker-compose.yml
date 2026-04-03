@@ -119,7 +119,7 @@ services:
       sleep 5;
       mc alias set minio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
       mc mb minio/livekit --ignore-existing;
-      mc policy set public minio/livekit;
+      mc anonymous set download minio/livekit || mc policy set public minio/livekit;
       exit 0;
       "
     networks:
