@@ -25,6 +25,7 @@ services:
       <<: *depends_postgres
     environment:
       NODE_ENV: production
+      PRISMA_DB_PUSH_ON_START: ${PRISMA_DB_PUSH_ON_START:-false}
       DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
       DATABASE_USER: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
@@ -53,6 +54,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      PRISMA_DB_PUSH_ON_START: ${PRISMA_DB_PUSH_ON_START:-false}
       DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
       DATABASE_USER: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
@@ -88,6 +90,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      PRISMA_DB_PUSH_ON_START: ${PRISMA_DB_PUSH_ON_START:-false}
       DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
       DATABASE_USER: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
@@ -151,6 +154,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      PRISMA_DB_PUSH_ON_START: ${PRISMA_DB_PUSH_ON_START:-false}
       DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
       DATABASE_USER: ${POSTGRES_USER}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
